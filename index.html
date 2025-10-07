@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Generator App - Connected to Database</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .badge {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            display: inline-block;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .option-btn {
+            background: white;
+            color: #333;
+            border: 2px solid #e0e0e0;
+            margin-top: 10px;
+            text-align: left;
+            padding: 15px;
+        }
+
+        .option-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .option-btn.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .question-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .result-card h3 {
+            font-size: 3em;
+            margin: 20px 0;
+        }
+
+        .error {
+            color: #f5576c;
+            font-size: 0.9em;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .success {
+            color: #00f2fe;
+            font-size: 0.9em;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .success.show {
+            display: block;
+        }
+
+        .link-text {
+            text-align: center;
+            margin-top: 15px;
+            color: #667eea;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .link-text:hover {
+            text-decoration: underline;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+
+        .emoji {
+            font-size: 4em;
+            margin: 20px 0;
+        }
+
+        .history-item {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Welcome Screen -->
+        <div id="welcomeScreen" class="screen active">
+            <h1>🎓 Quiz Generator</h1>
+            <p class="subtitle">Test your knowledge with our interactive quizzes!</p>
+            <p class="subtitle"><span class="badge">💾 Connected to Database</span></p>
+            <button type="button" onclick="goToLogin()">Login</button>
+            <button type="button" class="btn-secondary" onclick="goToRegister()">Register</button>
+        </div>
+
+        <!-- Register Screen -->
+        <div id="registerScreen" class="screen">
+            <h2>📝 Register</h2>
+            <div class="input-group">
+                <label>Name</label>
+                <input type="text" id="regName" placeholder="Enter your name">
+                <span class="error" id="regNameError">Name is required</span>
+            </div>
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" id="regUsername" placeholder="Choose a username">
+                <span class="error" id="regUsernameError">Username is required</span>
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="regPassword" placeholder="Create a password">
+                <span class="error" id="regPasswordError">Password is required</span>
+            </div>
+            <span class="success" id="regSuccess"></span>
+            <button type="button" onclick="register()" id="registerBtn">Register</button>
+            <p class="link-text" onclick="goToLogin()">Already have an account? Login</p>
+        </div>
+
+        <!-- Login Screen -->
+        <div id="loginScreen" class="screen">
+            <h2>🔐 Login</h2>
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" id="loginUsername" placeholder="Enter your username">
+                <span class="error" id="loginUsernameError">Username is required</span>
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter your password">
+                <span class="error" id="loginPasswordError">Password is required</span>
+            </div>
+            <button type="button" onclick="login()" id="loginBtn">Login</button>
+            <p class="link-text" onclick="goToRegister()">Don't have an account? Register</p>
+        </div>
+
+        <!-- Subject Selection Screen -->
+        <div id="subjectScreen" class="screen">
+            <h2>📚 Choose Subject</h2>
+            <p class="subtitle">Welcome, <strong id="userName"></strong>!</p>
+            <button type="button" class="option-btn" onclick="selectSubject('maths')">📐 Mathematics</button>
+            <button type="button" class="option-btn" onclick="selectSubject('science')">🔬 Science</button>
+            <button type="button" class="option-btn" onclick="selectSubject('cs')">💻 Computer Science</button>
+            <button type="button" class="btn-success" onclick="viewHistory()" style="margin-top: 20px;">📊 View History</button>
+            <button type="button" class="btn-secondary" onclick="logout()">Logout</button>
+        </div>
+
+        <!-- Difficulty Selection Screen -->
+        <div id="difficultyScreen" class="screen">
+            <h2>⚡ Choose Difficulty</h2>
+            <button type="button" class="option-btn" onclick="selectDifficulty('easy')">😊 Easy</button>
+            <button type="button" class="option-btn" onclick="selectDifficulty('medium')">😐 Medium</button>
+            <button type="button" class="option-btn" onclick="selectDifficulty('difficult')">😤 Difficult</button>
+            <button type="button" class="btn-secondary" onclick="goToSubject()" style="margin-top: 20px;">Back</button>
+        </div>
+
+        <!-- Number of Questions Screen -->
+        <div id="numQuestionsScreen" class="screen">
+            <h2>🔢 Number of Questions</h2>
+            <div class="input-group">
+                <label>How many questions? (Max: <span id="maxQuestions">5</span>)</label>
+                <input type="number" id="numQuestions" min="1" max="5" value="5">
+            </div>
+            <button type="button" onclick="startQuiz()" id="startQuizBtn">Start Quiz</button>
+            <button type="button" class="btn-secondary" onclick="goToDifficulty()">Back</button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quizScreen" class="screen">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar"></div>
+            </div>
+            <div class="question-header">
+                <div id="questionNumber">Question 1/5</div>
+            </div>
+            <h2 id="questionText">Question goes here?</h2>
+            <div id="optionsContainer"></div>
+            <button type="button" onclick="submitAnswer()" style="margin-top: 20px;">Submit Answer</button>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="resultScreen" class="screen">
+            <h2>🎉 Quiz Complete!</h2>
+            <div class="result-card">
+                <div class="emoji" id="resultEmoji">🏆</div>
+                <h3 id="scoreDisplay">0/0</h3>
+                <p id="percentageDisplay">0%</p>
+                <p id="resultMessage">Great job!</p>
+            </div>
+            <div style="background: #f8f9ff; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <p><strong>Subject:</strong> <span id="resultSubject"></span></p>
+                <p><strong>Difficulty:</strong> <span id="resultDifficulty"></span></p>
+            </div>
+            <button type="button" onclick="reattempt()">🔄 Reattempt Quiz</button>
+            <button type="button" class="btn-success" onclick="goToSubject()">📚 Main Menu</button>
+            <button type="button" class="btn-secondary" onclick="logout()">🚪 Logout</button>
+        </div>
+
+        <!-- History Screen -->
+        <div id="historyScreen" class="screen">
+            <h2>📊 Quiz History</h2>
+            <div id="historyContainer" class="loading">Loading history...</div>
+            <button type="button" class="btn-secondary" onclick="goToSubject()" style="margin-top: 20px;">Back to Main Menu</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:5000/api';
+        
+        // App State
+        let currentSubject = '';
+        let currentDifficulty = '';
+        let selectedQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedAnswer = null;
+        let currentUserName = '';
+
+        // Screen Management Functions
+        function showScreen(screenId) {
+            console.log('Showing screen:', screenId);
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function goToLogin() {
+            showScreen('loginScreen');
+        }
+
+        function goToRegister() {
+            showScreen('registerScreen');
+        }
+
+        function goToSubject() {
+            showScreen('subjectScreen');
+        }
+
+        function goToDifficulty() {
+            showScreen('difficultyScreen');
+        }
+
+        // Registration
+        async function register() {
+            console.log('Register button clicked!');
+            const name = document.getElementById('regName').value.trim();
+            const username = document.getElementById('regUsername').value.trim();
+            const password = document.getElementById('regPassword').value.trim();
+
+            document.querySelectorAll('.error, .success').forEach(e => e.classList.remove('show'));
+
+            if (!name || !username || !password) {
+                if (!name) document.getElementById('regNameError').classList.add('show');
+                if (!username) document.getElementById('regUsernameError').classList.add('show');
+                if (!password) document.getElementById('regPasswordError').classList.add('show');
+                return;
+            }
+
+            const btn = document.getElementById('registerBtn');
+            btn.disabled = true;
+            btn.textContent = 'Registering...';
+
+            try {
+                const response = await fetch(`${API_URL}/register`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({name, username, password})
+                });
+                
+                const data = await response.json();
+                console.log('Register response:', data);
+                
+                if (data.success) {
+                    document.getElementById('regSuccess').textContent = data.message;
+                    document.getElementById('regSuccess').classList.add('show');
+                    setTimeout(() => showScreen('loginScreen'), 1500);
+                } else {
+                    document.getElementById('regUsernameError').textContent = data.message;
+                    document.getElementById('regUsernameError').classList.add('show');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                alert('Error connecting to server. Make sure Flask server is running!');
+            }
+            
+            btn.disabled = false;
+            btn.textContent = 'Register';
+        }
+
+        // Login
+        async function login() {
+            console.log('Login button clicked!');
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+
+            document.querySelectorAll('.error').forEach(e => e.classList.remove('show'));
+
+            if (!username || !password) {
+                if (!username) document.getElementById('loginUsernameError').classList.add('show');
+                if (!password) document.getElementById('loginPasswordError').classList.add('show');
+                return;
+            }
+
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.textContent = 'Logging in...';
+
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username, password})
+                });
+                
+                const data = await response.json();
+                console.log('Login response:', data);
+                
+                if (data.success) {
+                    currentUserName = data.name;
+                    document.getElementById('userName').textContent = data.name;
+                    showScreen('subjectScreen');
+                } else {
+                    document.getElementById('loginPasswordError').textContent = data.message;
+                    document.getElementById('loginPasswordError').classList.add('show');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Error connecting to server. Make sure Flask server is running!');
+            }
+            
+            btn.disabled = false;
+            btn.textContent = 'Login';
+        }
+
+        // Subject Selection
+        function selectSubject(subject) {
+            console.log('Subject selected:', subject);
+            currentSubject = subject;
+            showScreen('difficultyScreen');
+        }
+
+        // Difficulty Selection
+        function selectDifficulty(difficulty) {
+            console.log('Difficulty selected:', difficulty);
+            currentDifficulty = difficulty;
+            document.getElementById('maxQuestions').textContent = '5';
+            document.getElementById('numQuestions').max = 5;
+            document.getElementById('numQuestions').value = 5;
+            showScreen('numQuestionsScreen');
+        }
+
+        // Start Quiz
+        async function startQuiz() {
+            console.log('Starting quiz...');
+            const numQ = parseInt(document.getElementById('numQuestions').value);
+            
+            const btn = document.getElementById('startQuizBtn');
+            btn.disabled = true;
+            btn.textContent = 'Loading Questions...';
+
+            try {
+                const response = await fetch(`${API_URL}/questions?subject=${currentSubject}&difficulty=${currentDifficulty}&num=${numQ}`);
+                const data = await response.json();
+                console.log('Questions loaded:', data);
+                
+                if (data.success) {
+                    selectedQuestions = data.questions;
+                    currentQuestionIndex = 0;
+                    score = 0;
+                    showScreen('quizScreen');
+                    displayQuestion();
+                }
+            } catch (error) {
+                console.error('Error loading questions:', error);
+                alert('Error loading questions. Make sure Flask server is running!');
+            }
+            
+            btn.disabled = false;
+            btn.textContent = 'Start Quiz';
+        }
+
+        // Display Question
+        function displayQuestion() {
+            const q = selectedQuestions[currentQuestionIndex];
+            const total = selectedQuestions.length;
+            
+            document.getElementById('questionNumber').textContent = `Question ${currentQuestionIndex + 1}/${total}`;
+            document.getElementById('questionText').textContent = q.question;
+            
+            const progress = ((currentQuestionIndex + 1) / total) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+            
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'option-btn';
+                btn.textContent = `${index + 1}. ${opt}`;
+                btn.onclick = () => selectOption(index, btn);
+                container.appendChild(btn);
+            });
+            
+            selectedAnswer = null;
+        }
+
+        // Select Option
+        function selectOption(index, btn) {
+            console.log('Option selected:', index);
+            document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedAnswer = index;
+        }
+
+        // Submit Answer
+        function submitAnswer() {
+            console.log('Submitting answer:', selectedAnswer);
+            if (selectedAnswer === null) {
+                alert('Please select an answer!');
+                return;
+            }
+
+            const q = selectedQuestions[currentQuestionIndex];
+            if (selectedAnswer === q.correct_answer) {
+                score++;
+                console.log('Correct! Score:', score);
+            } else {
+                console.log('Wrong! Correct answer was:', q.correct_answer);
+            }
+
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex < selectedQuestions.length) {
+                displayQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        // Show Result
+        async function showResult() {
+            console.log('Showing results. Final score:', score);
+            const total = selectedQuestions.length;
+            const percentage = (score / total) * 100;
+            
+            document.getElementById('scoreDisplay').textContent = `${score}/${total}`;
+            document.getElementById('percentageDisplay').textContent = `${percentage.toFixed(1)}%`;
+            document.getElementById('resultSubject').textContent = currentSubject.toUpperCase();
+            document.getElementById('resultDifficulty').textContent = currentDifficulty.charAt(0).toUpperCase() + currentDifficulty.slice(1);
+            
+            let emoji = '🏆';
+            let message = '';
+            
+            if (percentage >= 80) {
+                emoji = '🏆';
+                message = 'Excellent! Outstanding performance!';
+            } else if (percentage >= 60) {
+                emoji = '👍';
+                message = 'Good job! Well done!';
+            } else if (percentage >= 40) {
+                emoji = '📚';
+                message = 'Not bad! Keep practicing!';
+            } else {
+                emoji = '💪';
+                message = 'Don\'t give up! Practice makes perfect!';
+            }
+            
+            document.getElementById('resultEmoji').textContent = emoji;
+            document.getElementById('resultMessage').textContent = message;
+            
+            // Save result to database
+            try {
+                const response = await fetch(`${API_URL}/submit_result`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        subject: currentSubject,
+                        difficulty: currentDifficulty,
+                        score: score,
+                        total: total
+                    })
+                });
+                const data = await response.json();
+                console.log('Result saved:', data);
+            } catch (error) {
+                console.error('Error saving result:', error);
+            }
+            
+            showScreen('resultScreen');
+        }
+
+        // View History
+        async function viewHistory() {
+            console.log('Viewing history...');
+            showScreen('historyScreen');
+            document.getElementById('historyContainer').innerHTML = '<p class="loading">Loading history...</p>';
+            
+            try {
+                const response = await fetch(`${API_URL}/history`);
+                const data = await response.json();
+                console.log('History loaded:', data);
+                
+                if (data.success && data.history.length > 0) {
+                    let html = '';
+                    data.history.forEach((item, index) => {
+                        html += `
+                            <div class="history-item">
+                                <strong>${index + 1}. ${item.subject.toUpperCase()} - ${item.difficulty.charAt(0).toUpperCase() + item.difficulty.slice(1)}</strong>
+                                <p>Score: ${item.score}/${item.total} (${item.percentage.toFixed(1)}%)</p>
+                                <p style="font-size: 0.85em; color: #666;">Date: ${new Date(item.date).toLocaleString()}</p>
+                            </div>
+                        `;
+                    });
+                    document.getElementById('historyContainer').innerHTML = html;
+                } else {
+                    document.getElementById('historyContainer').innerHTML = '<p style="text-align: center; color: #666;">No quiz history found. Take a quiz to see your results here!</p>';
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+                document.getElementById('historyContainer').innerHTML = '<p style="text-align: center; color: #f5576c;">Error loading history. Make sure Flask server is running!</p>';
+            }
+        }
+
+        // Reattempt
+        function reattempt() {
+            console.log('Reattempt clicked');
+            showScreen('subjectScreen');
+        }
+
+        // Logout
+        async function logout() {
+            console.log('Logging out...');
+            try {
+                await fetch(`${API_URL}/logout`, {method: 'POST'});
+            } catch (error) {
+                console.error('Error logging out:', error);
+            }
+            currentUserName = '';
+            showScreen('welcomeScreen');
+        }
+
+        // Test on page load
+        console.log('Page loaded successfully!');
+        console.log('API URL:', API_URL);
+    </script>
+</body>
+</html>
