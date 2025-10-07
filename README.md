@@ -45,12 +45,9 @@ Step 5: View Results
 📊 Database Tables:
 1. users table
 Stores: id, name, username, password, registration date
-2. questions table
-Stores: 45 pre-loaded questions (15 per subject)
-Each question has 4 options and correct answer index
-3. quiz_results table
+2. quiz_results table
 Stores: user_id, subject, difficulty, score, percentage, date/time
-4. ai_generated_questions
+3. ai_generated_questions
 
 
 💻 Technologies Used
